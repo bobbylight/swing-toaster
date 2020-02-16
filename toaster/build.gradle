@@ -1,0 +1,76 @@
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+apply plugin: 'jacoco'
+
+java {
+	withSourcesJar()
+	withJavadocJar()
+}
+
+jacocoTestReport {
+	reports {
+		xml.enabled = true // coveralls plugin depends on xml format report
+		html.enabled = true
+	}
+}
+
+publishing {
+	repositories {
+		maven {
+			def releasesRepoUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+			def snapshotsRepoUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
+			url = isReleaseVersion ? releasesRepoUrl : snapshotsRepoUrl
+			credentials { // Credentials usually kept in user's .gradle/gradle.properties
+				// We must defensively check for these properties so Travis CI build works
+				username = project.hasProperty('ossrhUsername') ? ossrhUsername : 'unknown'
+				password = project.hasProperty('ossrhPassword') ? ossrhPassword : 'unknown'
+			}
+		}
+	}
+	publications {
+		maven(MavenPublication) {
+
+			groupId = 'com.fifesoft'
+			artifactId = archivesBaseName
+			version = version
+
+			from components.java
+
+			pom {
+				name = archivesBaseName
+				description = 'A toaster widget for Swing applications.'
+				url = 'http://www.fifesoft.com/'
+				inceptionYear = '2003'
+				packaging = 'jar'
+				licenses {
+					license {
+						name = 'BSD-3-Clause'
+						url = 'https://github.com/bobbylight/'
+					}
+				}
+				developers {
+					developer {
+						name = 'Robert Futrell'
+					}
+				}
+				scm {
+					url = 'https://github.com/bobbylight/'
+					connection = 'scm:git:git://github.com/bobbylight/'
+					developerConnection = 'scm:git:git@github.com:bobbylight/'
+					if (isReleaseVersion) {
+						tag = project.version
+					}
+				}
+			}
+		}
+	}
+}
+
+signing {
+	// Don't require signing for e.g. ./gradlew install
+	required { gradle.taskGraph.hasTask('publish') && isReleaseVersion }
+	sign publishing.publications.maven
+}
+tasks.withType(Sign) {
+	onlyIf { isReleaseVersion }
+}

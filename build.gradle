@@ -1,0 +1,48 @@
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+}
+plugins {
+	id 'java-library'
+}
+
+group = 'com.fifesoft'
+archivesBaseName = 'swing-toaster'
+
+ext.isReleaseVersion = !project.version.endsWith('SNAPSHOT')
+
+assert JavaVersion.current().isJava11Compatible()
+
+allprojects {
+
+	repositories {
+		mavenCentral()
+	}
+
+	wrapper {
+		gradleVersion '6.1.1'
+	}
+}
+
+subprojects {
+
+	apply plugin: 'java'
+	apply plugin: 'checkstyle'
+
+	dependencies {
+		testImplementation 'junit:junit:4.12'
+	}
+
+	checkstyle {
+		toolVersion = '8.29'
+	}
+
+	compileJava {
+		sourceCompatibility javaVersion
+		targetCompatibility javaVersion
+		options.debug = true
+		options.debugOptions.debugLevel = 'source,vars,lines'
+		options.compilerArgs << '-Xlint:deprecation' << '-Xlint:unchecked'
+	}
+}
