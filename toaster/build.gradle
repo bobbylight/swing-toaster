@@ -2,6 +2,10 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 apply plugin: 'jacoco'
 
+dependencies {
+	testImplementation 'junit:junit:4.12'
+}
+
 java {
 	withSourcesJar()
 	withJavadocJar()

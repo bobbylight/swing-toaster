@@ -1,3 +1,8 @@
 dependencies {
+
 	implementation project(':toaster')
+
+	// Test in some popular 3rd-party look and feels
+	implementation 'com.formdev:flatlaf:0.26'
+	implementation 'org.pushing-pixels:radiance-substance:2.5.1'
 }

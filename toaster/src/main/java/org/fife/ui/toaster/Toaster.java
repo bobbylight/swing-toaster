@@ -9,7 +9,7 @@ import java.awt.*;
  */
 public class Toaster extends JWindow {
 
-	public static final int DEFAULT_CLOSE_DELAY = 8000;
+	static final int DEFAULT_CLOSE_DELAY = 8000;
 
 	private Timer timer;
     private JComponent content;

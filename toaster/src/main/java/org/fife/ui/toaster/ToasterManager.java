@@ -12,21 +12,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ToasterManager {
+/**
+ * Creates and tracks {@code Toaster} instances and ensures they are laid out appropriately.
+ */
+public final class ToasterManager {
 
-	private static List<Toaster> toasters = new ArrayList<>();
-	private static Map<Window, ParentListener> listeners = new HashMap<>();
+	public static final int DEFAULT_CLOSE_DELAY = Toaster.DEFAULT_CLOSE_DELAY;
+
+	private static ToasterManager instance;
+
+	private List<Toaster> toasters = new ArrayList<>();
+	private Map<Window, ParentListener> listeners = new HashMap<>();
+	private int defaultCloseDelay;
 
 	/**
 	 * Private constructor to prevent instantiation.
 	 */
 	private ToasterManager() {
-		// Do nothing (comment for Sonar)
+		defaultCloseDelay = DEFAULT_CLOSE_DELAY;
 	}
 
-	public static Toaster addToaster(Window parent, JComponent content) {
+	public Toaster addToaster(Window parent, JComponent content) {
 
 		Toaster toaster = new Toaster(parent, content);
+		toaster.setCloseDelay(getDefaultCloseDelay());
 		toaster.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosed(WindowEvent e) {
@@ -45,7 +54,7 @@ public class ToasterManager {
 			setLocationRelativeToToaster(toaster, toasters.get(toasters.size() - 1));
 		}
 
-		ToasterManager.toasters.add(toaster);
+		ToasterManager.get().toasters.add(toaster);
 		if (!listeners.containsKey(parent)) {
 			ParentListener listener = new ParentListener();
 			listener.install(parent);
@@ -54,7 +63,7 @@ public class ToasterManager {
 		return toaster;
 	}
 
-	private static void adjustToasterPositionsForWindow(Window parent) {
+	private void adjustToasterPositionsForWindow(Window parent) {
 
 		List<Toaster> toasters = getToastersForWindow(parent);
 
@@ -68,18 +77,34 @@ public class ToasterManager {
 		}
 	}
 
-	private static List<Toaster> getToastersForWindow(Window parent) {
-		return ToasterManager.toasters.stream()
+	public static ToasterManager get() {
+
+		if (instance == null) {
+			instance = new ToasterManager();
+		}
+		return instance;
+	}
+
+	public int getDefaultCloseDelay() {
+		return defaultCloseDelay;
+	}
+
+	private List<Toaster> getToastersForWindow(Window parent) {
+		return ToasterManager.get().toasters.stream()
 			.filter(f -> f.getParent() == parent)
 			.collect(Collectors.toList());
 	}
 
-	private static void removeToasterAndAdjustToasterPositions(Toaster toaster) {
+	private void removeToasterAndAdjustToasterPositions(Toaster toaster) {
 		toasters.remove(toaster);
 		adjustToasterPositionsForWindow((Window)toaster.getParent());
 	}
 
-	private static void setLocationRelativeToParent(Toaster toaster) {
+	public void setDefaultCloseDelay(int millis) {
+		this.defaultCloseDelay = millis;
+	}
+
+	private void setLocationRelativeToParent(Toaster toaster) {
 
 		Window parent = (Window)toaster.getParent();
 
@@ -90,7 +115,7 @@ public class ToasterManager {
 		toaster.setLocation(x, y);
 	}
 
-	private static void setLocationRelativeToToaster(Toaster toaster, Toaster relativeTo) {
+	private void setLocationRelativeToToaster(Toaster toaster, Toaster relativeTo) {
 
 		Window parent = (Window)toaster.getParent();
 
@@ -101,7 +126,7 @@ public class ToasterManager {
 		toaster.setLocation(x, y);
 	}
 
-	private static class ParentListener implements ComponentListener {
+	private class ParentListener implements ComponentListener {
 
 		public void install(Window parent) {
 			parent.addComponentListener(this);
